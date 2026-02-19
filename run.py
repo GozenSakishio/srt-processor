@@ -61,7 +61,9 @@ def process_with_fallback(providers, prompt: str, config: dict) -> tuple[str, st
                 if attempt == 0:
                     print(f"    Debug traceback: {traceback.format_exc().splitlines()[-3:]}")
                 if attempt < max_retries - 1:
-                    time.sleep(retry_delay)
+                    backoff = retry_delay * (2 ** attempt)
+                    print(f"    Retrying in {backoff}s...")
+                    time.sleep(backoff)
     
     raise RuntimeError("All providers failed")
 
