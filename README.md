@@ -1,10 +1,10 @@
 # SRT Processor
 
-Clean SRT subtitle files for RAG knowledge base using AI (SiliconFlow & Alibaba Cloud).
+Clean SRT subtitle files for RAG knowledge base using AI (Alibaba Cloud, SiliconFlow & OpenRouter).
 
 ## Features
 
-- Dual provider support with automatic fallback
+- Multiple provider support with automatic fallback
 - Extracts and cleans subtitle text
 - Outputs formatted TXT for RAG systems
 - Filename used as section title
@@ -37,12 +37,19 @@ providers:
     base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     model: qwen3-8b
     enabled: true
+    proxy: null
     extra_params:
       enable_thinking: false
       
   - name: siliconflow
     base_url: https://api.siliconflow.cn/v1
     model: Qwen/Qwen3-8B
+    enabled: true
+    proxy: null
+    
+  - name: openrouter
+    base_url: https://openrouter.ai/api/v1
+    model: qwen/qwen3-8b
     enabled: true
 
 rate_limit:
@@ -54,14 +61,16 @@ rate_limit:
 
 - Providers are tried in order
 - Use `extra_params` for provider-specific options (e.g., Alibaba requires `enable_thinking: false`)
+- Use `proxy: null` to bypass system proxy for specific providers
 - Adjust `timeout` and `retry_delay` if experiencing connection errors
 
 ## API Keys
 
 | Provider | Key Name | Get Key |
 |----------|----------|---------|
-| SiliconFlow | `SILICONFLOW_API_KEY` | https://cloud.siliconflow.cn |
 | Alibaba Cloud | `ALIBABA_API_KEY` | https://dashscope.console.aliyun.com |
+| SiliconFlow | `SILICONFLOW_API_KEY` | https://cloud.siliconflow.cn |
+| OpenRouter | `OPENROUTER_API_KEY` | https://openrouter.ai/keys |
 
 ## Output
 
