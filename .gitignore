@@ -9,3 +9,4 @@ venv/
 output/*
 input/*
 !output/.gitkeep
+.vscode/settings.json
