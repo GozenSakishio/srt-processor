@@ -31,4 +31,6 @@ rate_limit:
   requests_per_minute: 30
   retry_on_error: true
   max_retries: 3
+  retry_delay: 5
   fallback_to_next_provider: true
+  timeout: 60

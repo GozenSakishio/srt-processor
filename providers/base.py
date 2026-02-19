@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 from openai import OpenAI
 
 class BaseProvider(ABC):
-    def __init__(self, config: dict, api_key: str):
+    def __init__(self, config: dict, api_key: str, timeout: float = 60.0):
         self.config = config
         self.client = OpenAI(
             api_key=api_key,
-            base_url=config['base_url']
+            base_url=config['base_url'],
+            timeout=timeout
         )
         self.name = config['name']
         self.model = config['model']

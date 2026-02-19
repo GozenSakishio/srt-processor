@@ -47,6 +47,7 @@ def extract_text_from_srt(srt_content: str) -> str:
 def process_with_fallback(providers, prompt: str, config: dict) -> tuple[str, str]:
     rate_config = config['rate_limit']
     max_retries = rate_config.get('max_retries', 3)
+    retry_delay = rate_config.get('retry_delay', 5)
     
     for provider in providers:
         for attempt in range(max_retries):
@@ -55,9 +56,12 @@ def process_with_fallback(providers, prompt: str, config: dict) -> tuple[str, st
                 result = provider.process(prompt)
                 return result, provider.name
             except Exception as e:
+                import traceback
                 print(f"    Error with {provider.name}: {e}")
+                if attempt == 0:
+                    print(f"    Debug traceback: {traceback.format_exc().splitlines()[-3:]}")
                 if attempt < max_retries - 1:
-                    time.sleep(2)
+                    time.sleep(retry_delay)
     
     raise RuntimeError("All providers failed")
 

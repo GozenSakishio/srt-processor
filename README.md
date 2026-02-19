@@ -44,9 +44,17 @@ providers:
     base_url: https://api.siliconflow.cn/v1
     model: Qwen/Qwen3-8B
     enabled: true
+
+rate_limit:
+  requests_per_minute: 30
+  max_retries: 3
+  retry_delay: 5
+  timeout: 60
 ```
 
-Providers are tried in order. Use `extra_params` for provider-specific options (e.g., Alibaba requires `enable_thinking: false` for non-streaming calls).
+- Providers are tried in order
+- Use `extra_params` for provider-specific options (e.g., Alibaba requires `enable_thinking: false`)
+- Adjust `timeout` and `retry_delay` if experiencing connection errors
 
 ## API Keys
 
