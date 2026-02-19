@@ -5,9 +5,13 @@ from openai import OpenAI
 class BaseProvider(ABC):
     def __init__(self, config: dict, api_key: str, timeout: float = 60.0):
         self.config = config
+        proxy = config.get('proxy')
+        trust_env = proxy is not False
         self.http_client = httpx.Client(
             limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
-            timeout=httpx.Timeout(timeout)
+            timeout=httpx.Timeout(timeout),
+            proxy=proxy,
+            trust_env=trust_env
         )
         self.client = OpenAI(
             api_key=api_key,

@@ -3,6 +3,7 @@ providers:
     base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     model: qwen3-8b
     enabled: true
+    proxy: null
     extra_params:
       enable_thinking: false
       
@@ -10,6 +11,7 @@ providers:
     base_url: https://api.siliconflow.cn/v1
     model: Qwen/Qwen3-8B
     enabled: true
+    proxy: null
 
 processing:
   prompt: |
