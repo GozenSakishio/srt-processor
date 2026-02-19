@@ -33,14 +33,20 @@ Edit `config.yaml`:
 
 ```yaml
 providers:
-  - name: siliconflow
-    model: Qwen/Qwen3-8B
-    enabled: true
-    
   - name: alibaba
+    base_url: https://dashscope.aliyuncs.com/compatible-mode/v1
     model: qwen3-8b
     enabled: true
+    extra_params:
+      enable_thinking: false
+      
+  - name: siliconflow
+    base_url: https://api.siliconflow.cn/v1
+    model: Qwen/Qwen3-8B
+    enabled: true
 ```
+
+Providers are tried in order. Use `extra_params` for provider-specific options (e.g., Alibaba requires `enable_thinking: false` for non-streaming calls).
 
 ## API Keys
 

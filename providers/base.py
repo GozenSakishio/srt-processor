@@ -17,10 +17,13 @@ class BaseProvider(ABC):
 
 class OpenAICompatibleProvider(BaseProvider):
     def process(self, prompt: str, temperature: float = 0.7, max_tokens: int = 4000) -> str:
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=temperature,
-            max_tokens=max_tokens
-        )
+        params = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        if self.config.get('extra_params'):
+            params.update(self.config['extra_params'])
+        response = self.client.chat.completions.create(**params)
         return response.choices[0].message.content
