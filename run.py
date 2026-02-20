@@ -15,6 +15,7 @@ load_dotenv()
 INPUT_DIR = Path("input")
 OUTPUT_DIR = Path("output")
 CONFIG_FILE = Path("config.yaml")
+MAX_CHUNK_SIZE = 12000
 
 
 def load_config():
@@ -44,6 +45,30 @@ def extract_text_from_srt(srt_content: str) -> str:
     return '\n'.join(text_lines)
 
 
+def split_text_into_chunks(text: str, max_size: int = MAX_CHUNK_SIZE) -> list[str]:
+    sentences = re.split(r'(?<=[。.!?])\s*', text)
+    chunks = []
+    current_chunk = []
+    current_size = 0
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        sent_size = len(sentence)
+        if current_size + sent_size + 1 > max_size and current_chunk:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+            current_size = 0
+        current_chunk.append(sentence)
+        current_size += sent_size + 1
+    
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    return chunks
+
+
 def process_with_fallback(providers, prompt: str, config: dict) -> tuple[str, str]:
     rate_config = config['rate_limit']
     max_retries = rate_config.get('max_retries', 3)
@@ -66,6 +91,33 @@ def process_with_fallback(providers, prompt: str, config: dict) -> tuple[str, st
     raise RuntimeError("All providers failed")
 
 
+def process_large_text(providers, raw_text: str, config: dict) -> tuple[str, str]:
+    if len(raw_text) <= MAX_CHUNK_SIZE:
+        prompt_template = config['processing']['prompt']
+        prompt = prompt_template.format(content=raw_text)
+        return process_with_fallback(providers, prompt, config)
+    
+    chunks = split_text_into_chunks(raw_text)
+    print(f"    Split into {len(chunks)} chunks ({[len(c) for c in chunks]} chars each)")
+    
+    prompt_template = config['processing']['prompt']
+    results = []
+    last_provider = None
+    
+    for i, chunk in enumerate(chunks):
+        print(f"    Processing chunk {i+1}/{len(chunks)}...")
+        prompt = prompt_template.format(content=chunk)
+        result, provider = process_with_fallback(providers, prompt, config)
+        results.append(result)
+        last_provider = provider
+        if i < len(chunks) - 1:
+            delay = 60.0 / config['rate_limit']['requests_per_minute']
+            time.sleep(delay)
+    
+    combined = '\n\n'.join(results)
+    return combined, last_provider
+
+
 def main():
     config = load_config()
     providers = get_enabled_providers(config)
@@ -86,41 +138,45 @@ def main():
     
     rate_config = config['rate_limit']
     delay = 60.0 / rate_config['requests_per_minute']
-    prompt_template = config['processing']['prompt']
     include_title = config['processing'].get('include_filename_as_title', True)
     
-    for i, srt_file in enumerate(srt_files, 1):
-        print(f"[{i}/{len(srt_files)}] {srt_file.name}")
-        
-        try:
-            srt_content = read_srt(srt_file)
-            raw_text = extract_text_from_srt(srt_content)
+    try:
+        for i, srt_file in enumerate(srt_files, 1):
+            print(f"[{i}/{len(srt_files)}] {srt_file.name}")
             
-            if not raw_text.strip():
-                print(f"    Skipping: No text content found")
-                continue
+            try:
+                srt_content = read_srt(srt_file)
+                raw_text = extract_text_from_srt(srt_content)
+                
+                if not raw_text.strip():
+                    print(f"    Skipping: No text content found")
+                    continue
+                
+                cleaned_text, used_provider = process_large_text(providers, raw_text, config)
+                
+                output_lines = []
+                if include_title:
+                    title = srt_file.stem
+                    output_lines.append(f"# {title}\n")
+                output_lines.append(cleaned_text)
+                
+                output_file = OUTPUT_DIR / f"{srt_file.stem}.txt"
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    f.write('\n'.join(output_lines))
+                
+                print(f"    Done via {used_provider} -> {output_file.name}")
+                
+            except Exception as e:
+                print(f"    Failed: {e}")
             
-            prompt = prompt_template.format(content=raw_text)
-            
-            cleaned_text, used_provider = process_with_fallback(providers, prompt, config)
-            
-            output_lines = []
-            if include_title:
-                title = srt_file.stem
-                output_lines.append(f"# {title}\n")
-            output_lines.append(cleaned_text)
-            
-            output_file = OUTPUT_DIR / f"{srt_file.stem}.txt"
-            with open(output_file, 'w', encoding='utf-8') as f:
-                f.write('\n'.join(output_lines))
-            
-            print(f"    Done via {used_provider} -> {output_file.name}")
-            
-        except Exception as e:
-            print(f"    Failed: {e}")
-        
-        if i < len(srt_files):
-            time.sleep(delay)
+            if i < len(srt_files):
+                time.sleep(delay)
+    finally:
+        for provider in providers:
+            try:
+                provider.close()
+            except Exception:
+                pass
     
     print("\nAll done!")
 

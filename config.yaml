@@ -4,6 +4,7 @@ providers:
     model: qwen3-8b
     enabled: true
     proxy: null
+    max_tokens: 8000
     extra_params:
       enable_thinking: false
       
@@ -12,11 +13,13 @@ providers:
     model: Qwen/Qwen3-8B
     enabled: true
     proxy: null
+    max_tokens: 16000
     
   - name: openrouter
     base_url: https://openrouter.ai/api/v1
     model: qwen/qwen3-8b
     enabled: true
+    max_tokens: 16000
 
 processing:
   prompt: |
@@ -27,6 +30,7 @@ processing:
     3. 修正明显的标点错误
     4. 保持原文语义不变
     5. 输出连贯的段落文本
+    6. 必须完整输出全部内容，不要省略或截断任何部分
     
     字幕内容：
     {content}
@@ -40,4 +44,5 @@ rate_limit:
   max_retries: 3
   retry_delay: 5
   fallback_to_next_provider: true
-  timeout: 60
+  timeout: 120
+  max_tokens: 8000

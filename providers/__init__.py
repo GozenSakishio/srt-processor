@@ -17,7 +17,8 @@ def create_provider(provider_config: dict, timeout: float = 60.0) -> BaseProvide
 
 def get_enabled_providers(config: dict) -> list:
     providers = []
-    timeout = config.get('rate_limit', {}).get('timeout', 60.0)
+    rate_config = config.get('rate_limit', {})
+    timeout = rate_config.get('timeout', 60.0)
     for p in config['providers']:
         if p.get('enabled', True):
             try:
