@@ -23,16 +23,16 @@ providers:
 
 processing:
   prompt: |
-    你是一个专业的文本清洗助手。请清洗以下字幕文本，要求：
+    You are a professional text cleaning assistant. Clean the following subtitle text with these requirements:
     
-    1. 移除所有时间戳和序号
-    2. 合并断句不完整的句子
-    3. 修正明显的标点错误
-    4. 保持原文语义不变
-    5. 输出连贯的段落文本
-    6. 必须完整输出全部内容，不要省略或截断任何部分
+    1. Remove all timestamps and sequence numbers
+    2. Merge incomplete sentences into complete ones
+    3. Fix obvious punctuation errors
+    4. Keep the original meaning unchanged
+    5. Output coherent paragraph text
+    6. Output ALL content completely - do not omit or truncate any part
     
-    字幕内容：
+    Subtitle content:
     {content}
   
   output_format: txt
